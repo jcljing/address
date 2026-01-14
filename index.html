@@ -3,178 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小区地址搜索 - 除甲醛施工助手</title>
+    <title>除甲醛施工助手 - 地址搜索</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, sans-serif; background: #f8f9fa; min-height: 100vh; padding: 20px 15px; }
         .container { max-width: 500px; margin: 0 auto; }
-        
-        .header { text-align: center; margin-bottom: 20px; padding-top: 10px; }
-        .logo { width: 50px; height: 50px; background: linear-gradient(135deg, #07c160, #06ad56); border-radius: 12px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
-        .logo span { font-size: 24px; color: white; }
-        .header h1 { color: #333; font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-        .header p { color: #666; font-size: 13px; }
-        
-        .search-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .search-box { position: relative; margin-bottom: 12px; }
-        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; }
-        #searchInput { width: 100%; padding: 12px 12px 12px 36px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 15px; outline: none; }
-        #searchInput:focus { border-color: #07c160; }
-        
-        .city-row { display: flex; gap: 8px; align-items: center; }
-        #citySelect { flex: 1; padding: 8px 10px; border: 1px solid #e1e5e9; border-radius: 6px; font-size: 13px; background: white; }
-        #searchBtn { background: #07c160; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
-        
-        .results-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: none; max-height: 400px; overflow-y: auto; margin-top: 8px; }
-        .result-item { padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
-        .result-item:active { background: #f0f7ff; }
-        .result-title { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 4px; }
-        .result-address { font-size: 12px; color: #666; line-height: 1.4; }
-        .result-district { color: #07c160; font-size: 11px; margin-top: 4px; background: rgba(7,193,96,0.1); display: inline-block; padding: 2px 6px; border-radius: 4px; }
-        
-        .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 12px 15px env(safe-area-inset-bottom); display: none; justify-content: space-between; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
-        .action-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { width: 50px; height: 50px; background: #07c160; border-radius: 12px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
+        .search-card { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        #searchInput { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; outline: none; }
+        .city-row { display: flex; gap: 10px; }
+        #citySelect { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        #searchBtn { padding: 10px 20px; background: #07c160; color: white; border: none; border-radius: 8px; font-weight: bold; }
+        .results-card { background: white; border-radius: 12px; margin-top: 15px; overflow: hidden; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .result-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+        .result-item:last-child { border-bottom: none; }
+        .result-title { font-weight: bold; color: #333; }
+        .result-address { font-size: 12px; color: #666; margin-top: 4px; }
+        .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px; display: none; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .action-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; }
         .copy-btn { background: #07c160; color: white; }
         .nav-btn { background: #f0f2f5; color: #333; }
-        
-        .loading { text-align: center; padding: 30px; color: #666; font-size: 13px; }
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 6px; font-size: 13px; z-index: 1000; display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo"><span>🏠</span></div>
-            <h1>小区地址搜索</h1>
-            <p>输入小区名称，自动匹配准确地址</p>
-        </div>
-        
-        <div class="search-card">
-            <div class="search-box">
-                <div class="search-icon">🔍</div>
-                <input type="search" id="searchInput" placeholder="例如：万科城市花园" autocomplete="off">
-            </div>
-            <div class="city-row">
-                <select id="citySelect">
-                    <option value="北京">北京市</option>
-                    <option value="上海">上海市</option>
-                    <option value="广州">广州市</option>
-                    <option value="深圳">深圳市</option>
-                    <option value="成都">成都市</option>
-                    <option value="杭州">杭州市</option>
-                </select>
-                <button id="searchBtn">搜索</button>
-            </div>
-        </div>
-        
-        <div class="results-card" id="resultsCard">
-            <div class="loading" id="loading" style="display: none;">正在请求位置数据...</div>
-            <div id="resultsList"></div>
-        </div>
-        
-        <div class="action-bar" id="actionBar">
-            <button class="action-btn nav-btn" onclick="openNavigation()">🗺️ 开始导航</button>
-            <button class="action-btn copy-btn" onclick="copyAddress()">📋 复制地址</button>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">🏠</div>
+        <h2>小区地址搜索</h2>
+    </div>
+
+    <div class="search-card">
+        <input type="search" id="searchInput" placeholder="请输入小区名称">
+        <div class="city-row">
+            <select id="citySelect">
+                <option value="北京">北京市</option>
+                <option value="上海">上海市</option>
+                <option value="广州">广州市</option>
+                <option value="深圳">深圳市</option>
+            </select>
+            <button id="searchBtn">搜索</button>
         </div>
     </div>
-    
-    <div class="toast" id="toast">已复制到剪贴板</div>
 
-    <script>
-        // 1. 配置 Key
-        const TENCENT_MAP_KEY = "LYQBZ-INAC4-MJ3UL-FVAGL-GYXH2-BYFSU";
+    <div id="resultsCard" class="results-card">
+        <div id="resultsList"></div>
+    </div>
+</div>
+
+<div id="actionBar" class="action-bar">
+    <button class="action-btn nav-btn" onclick="openNav()">🗺️ 导航</button>
+    <button class="action-btn copy-btn" onclick="copyAddr()">📋 复制地址</button>
+</div>
+
+<script>
+    const TENCENT_MAP_KEY = "LYQBZ-INAC4-MJ3UL-FVAGL-GYXH2-BYFSU";
+    let searchResults = [];
+    let selectedItem = null;
+
+    document.getElementById('searchBtn').onclick = () => {
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) performSearch(query);
+    };
+
+    // JSONP 搜索逻辑
+    function performSearch(query) {
+        const city = document.getElementById('citySelect').value;
+        const callbackName = 'jsonp_callback_' + Math.round(Math.random() * 1000000);
         
-        let searchResults = [];
-        let selectedResult = null;
-
-        // 2. 绑定事件
-        document.getElementById('searchBtn').onclick = () => {
-            const query = document.getElementById('searchInput').value.trim();
-            if (query) performSearch(query);
-        };
-
-        document.getElementById('searchInput').onkeypress = (e) => {
-            if (e.key === 'Enter') {
-                const query = e.target.value.trim();
-                if (query) performSearch(query);
-                e.target.blur();
+        // 1. 定义回调
+        window[callbackName] = function(data) {
+            delete window[callbackName];
+            document.body.removeChild(document.getElementById(callbackName));
+            
+            if (data.status === 0 && data.data) {
+                searchResults = data.data;
+                renderList(data.data);
+            } else {
+                alert("搜索失败: " + data.message);
             }
         };
 
-        // 3. 核心搜索逻辑 (JSONP 解决跨域)
-        function performSearch(query) {
-            const city = document.getElementById('citySelect').value;
-            const loading = document.getElementById('loading');
-            const resultsCard = document.getElementById('resultsCard');
-            const resultsList = document.getElementById('resultsList');
-            
-            loading.style.display = 'block';
-            resultsCard.style.display = 'block';
-            resultsList.innerHTML = '';
-            document.getElementById('actionBar').style.display = 'none';
+        // 2. 构造 URL (必须带 output=jsonp)
+        const url = `https://apis.map.qq.com/ws/place/v1/suggestion/?keyword=${encodeURIComponent(query)}&region=${encodeURIComponent(city)}&key=${TENCENT_MAP_KEY}&output=jsonp&callback=${callbackName}`;
+        
+        // 3. 插入 Script 标签
+        const script = document.createElement('script');
+        script.id = callbackName;
+        script.src = url;
+        document.body.appendChild(script);
+    }
 
-            // 创建 JSONP 回调
-            const callbackName = 'QQMapCallback_' + Math.round(Math.random() * 1000000);
-            window[callbackName] = function(data) {
-                loading.style.display = 'none';
-                if (data.status === 0 && data.data) {
-                    searchResults = data.data;
-                    displayResults(data.data);
-                } else {
-                    resultsList.innerHTML = `<div style="padding:20px;text-align:center;color:red;">${data.message || '查询失败'} (状态码:${data.status})</div>`;
-                }
-                // 清理
-                delete window[callbackName];
-                document.body.removeChild(document.getElementById(callbackName));
-            };
+    function renderList(items) {
+        const card = document.getElementById('resultsCard');
+        const list = document.getElementById('resultsList');
+        card.style.display = 'block';
+        list.innerHTML = items.map((item, i) => `
+            <div class="result-item" onclick="selectItem(${i})">
+                <div class="result-title">${item.title}</div>
+                <div class="result-address">${item.address}</div>
+            </div>
+        `).join('');
+    }
 
-            const url = `https://apis.map.qq.com/ws/place/v1/suggestion/?keyword=${encodeURIComponent(query)}&region=${encodeURIComponent(city)}&key=${TENCENT_MAP_KEY}&output=jsonp&callback=${callbackName}`;
-            
-            const script = document.createElement('script');
-            script.id = callbackName;
-            script.src = url;
-            document.body.appendChild(script);
-        }
+    function selectItem(i) {
+        selectedItem = searchResults[i];
+        document.getElementById('actionBar').style.display = 'flex';
+        document.querySelectorAll('.result-item').forEach((el, idx) => {
+            el.style.background = idx === i ? '#f0f7ff' : '#fff';
+        });
+    }
 
-        function displayResults(results) {
-            const list = document.getElementById('resultsList');
-            list.innerHTML = results.map((item, index) => `
-                <div class="result-item" onclick="selectResult(${index})">
-                    <div class="result-title">${item.title}</div>
-                    <div class="result-address">${item.address}</div>
-                    <div class="result-district">${item.district} · ${item.category || '建筑'}</div>
-                </div>
-            `).join('');
-        }
+    function copyAddr() {
+        const text = `${selectedItem.title} (${selectedItem.address})`;
+        navigator.clipboard.writeText(text).then(() => alert("已复制"));
+    }
 
-        function selectResult(index) {
-            selectedResult = searchResults[index];
-            document.querySelectorAll('.result-item').forEach((el, i) => {
-                el.style.background = i === index ? '#f0f7ff' : 'white';
-            });
-            document.getElementById('actionBar').style.display = 'flex';
-        }
+    function openNav() {
+        const { lat, lng } = selectedItem.location;
+        window.location.href = `https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=${encodeURIComponent(selectedItem.title)}&tocoord=${lat},${lng}&referer=myapp`;
+    }
+</script>
 
-        function copyAddress() {
-            if (!selectedResult) return;
-            const text = `${selectedResult.title} (${selectedResult.address})`;
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            
-            const toast = document.getElementById('toast');
-            toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', 2000);
-        }
-
-        function openNavigation() {
-            if (!selectedResult) return;
-            const { lat, lng } = selectedResult.location;
-            window.location.href = `https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=${encodeURIComponent(selectedResult.title)}&tocoord=${lat},${lng}&referer=myapp`;
-        }
-    </script>
 </body>
 </html>
