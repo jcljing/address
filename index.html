@@ -3,359 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>小区地址搜索 - 除甲醛施工助手</title>
+    <title>除甲醛施工助手 - 地址搜索</title>
     <style>
-        /* 省略样式代码，保持不变 */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, "Helvetica Neue", sans-serif; background: #f8f9fa; min-height: 100vh; padding: 20px 15px 100px; }
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        /* 顶部样式 */
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { width: 56px; height: 56px; background: linear-gradient(135deg, #07c160, #06ad56); border-radius: 14px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(7,193,96,0.2); }
+        .logo span { font-size: 28px; }
+        .header h1 { color: #333; font-size: 22px; font-weight: 600; }
+        .header p { color: #888; font-size: 13px; margin-top: 4px; }
+        
+        /* 搜索区域 */
+        .search-card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .search-box { position: relative; margin-bottom: 15px; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; z-index: 1; }
+        #searchInput { width: 100%; padding: 12px 12px 12px 38px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 16px; outline: none; transition: border 0.3s; }
+        #searchInput:focus { border-color: #07c160; }
+        
+        .city-row { display: flex; gap: 10px; align-items: center; }
+        #citySelect { flex: 1; padding: 10px; border: 1px solid #e1e5e9; border-radius: 8px; font-size: 14px; background: #fff; appearance: none; }
+        #searchBtn { background: #07c160; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+        
+        /* 结果区域 */
+        .results-card { background: white; border-radius: 12px; overflow: hidden; display: none; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+        .result-item { padding: 15px; border-bottom: 1px solid #f0f0f0; transition: background 0.2s; }
+        .result-item:last-child { border-bottom: none; }
+        .result-item:active { background: #f0f7ff; }
+        .result-title { font-size: 16px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+        .result-address { font-size: 13px; color: #666; line-height: 1.4; }
+        .result-tag { display: inline-block; font-size: 11px; color: #07c160; background: rgba(7,193,96,0.1); padding: 2px 6px; border-radius: 4px; margin-top: 6px; }
+
+        /* 底部操作栏 */
+        .action-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 16px 20px env(safe-area-inset-bottom); display: none; gap: 12px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 100; }
+        .action-btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .copy-btn { background: #07c160; color: white; }
+        .nav-btn { background: #f0f2f5; color: #333; }
+
+        /* 状态显示 */
+        .loading, .empty-state { text-align: center; padding: 40px 20px; color: #999; }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #07c160; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.75); color: white; padding: 12px 24px; border-radius: 25px; font-size: 14px; z-index: 1000; display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- 省略头部和搜索框代码，保持不变 -->
-        
-        <div class="search-card">
+
+<div class="container">
+    <div class="header">
+        <div class="logo"><span>🏡</span></div>
+        <h1>施工地址精准匹配</h1>
+        <p>甲醛治理项目专用 - 支持一键复制与导航</p>
+    </div>
+
+    <div class="search-card">
+        <form action="javascript:void(0);" id="searchForm">
             <div class="search-box">
                 <div class="search-icon">🔍</div>
-                <input type="text" id="searchInput" placeholder="输入小区名称，如：万科城市花园" autocomplete="off">
+                <input type="search" id="searchInput" placeholder="输入小区或大厦名称" autocomplete="off">
             </div>
-            
             <div class="city-row">
-                <span class="city-label">城市：</span>
                 <select id="citySelect">
-                    <option value="北京">北京市</option>
                     <option value="上海">上海市</option>
+                    <option value="北京">北京市</option>
                     <option value="广州">广州市</option>
                     <option value="深圳">深圳市</option>
-                    <option value="成都">成都市</option>
                     <option value="杭州">杭州市</option>
-                    <option value="武汉">武汉市</option>
                     <option value="南京">南京市</option>
+                    <option value="苏州">苏州市</option>
+                    <option value="成都">成都市</option>
+                    <option value="武汉">武汉市</option>
                 </select>
-                <button id="searchBtn">搜索</button>
+                <button type="submit" id="searchBtn">开始搜索</button>
             </div>
-        </div>
-        
-        <div class="results-card" id="resultsCard">
-            <div class="loading" id="loading" style="display: none;">
-                <span class="loading-spinner"></span> 正在搜索中...
-            </div>
-            <div id="resultsList"></div>
-        </div>
-        
-        <div class="action-bar" id="actionBar">
-            <button class="action-btn copy-btn" onclick="copyAddress()">📋 复制地址</button>
-            <button class="action-btn nav-btn" onclick="openNavigation()">🗺️ 开始导航</button>
-        </div>
+        </form>
     </div>
-    
-    <div class="toast" id="toast">已复制到剪贴板</div>
 
-    <script>
-        // 配置您的腾讯地图API Key
-        const TENCENT_MAP_KEY = "LYQBZ-INAC4-MJ3UL-FVAGL-GYXH2-BYFSU";
+    <div class="results-card" id="resultsCard">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在拉取最新位置数据...</p>
+        </div>
+        <div id="resultsList"></div>
+    </div>
+</div>
+
+<div class="action-bar" id="actionBar">
+    <button class="action-btn nav-btn" onclick="openNavigation()">🗺️ 导航</button>
+    <button class="action-btn copy-btn" onclick="copyAddress()">📋 复制完整地址</button>
+</div>
+
+<div class="toast" id="toast">提示信息</div>
+
+<script>
+    // 配置信息 (请务必在腾讯地图后台配置域名白名单)
+    const TENCENT_MAP_KEY = "LYQBZ-INAC4-MJ3UL-FVAGL-GYXH2-BYFSU";
+    
+    let selectedItem = null;
+    let searchResults = [];
+
+    const searchInput = document.getElementById('searchInput');
+    const searchForm = document.getElementById('searchForm');
+    const resultsCard = document.getElementById('resultsCard');
+    const resultsList = document.getElementById('resultsList');
+    const loading = document.getElementById('loading');
+    const actionBar = document.getElementById('actionBar');
+
+    // 搜索处理
+    searchForm.addEventListener('submit', () => {
+        const query = searchInput.value.trim();
+        if (query) performSearch(query);
+        searchInput.blur(); // 收起键盘
+    });
+
+    // 实时联动 (防抖)
+    let timer;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const query = e.target.value.trim();
+            if (query.length >= 2) performSearch(query);
+        }, 500);
+    });
+
+    // 核心查询函数 (使用 JSONP 解决跨域)
+    function performSearch(query) {
+        const city = document.getElementById('citySelect').value;
         
-        // 验证Key格式
-        if (!TENCENT_MAP_KEY || TENCENT_MAP_KEY.includes("YOUR")) {
-            alert("请配置正确的腾讯地图API Key");
+        resultsCard.style.display = 'block';
+        loading.style.display = 'block';
+        resultsList.innerHTML = '';
+        actionBar.style.display = 'none';
+
+        // 创建回调函数
+        const callbackName = 'jsonp_callback_' + Math.round(Math.random() * 100000);
+        window[callbackName] = function(data) {
+            handleResponse(data);
+            delete window[callbackName];
+            document.body.removeChild(script);
+        };
+
+        const url = `https://apis.map.qq.com/ws/place/v1/suggestion/?keyword=${encodeURIComponent(query)}&region=${encodeURIComponent(city)}&key=${TENCENT_MAP_KEY}&output=jsonp&callback=${callbackName}`;
+        
+        const script = document.createElement('script');
+        script.src = url;
+        document.body.appendChild(script);
+    }
+
+    function handleResponse(data) {
+        loading.style.display = 'none';
+        if (data.status === 0 && data.data.length > 0) {
+            searchResults = data.data;
+            renderResults(data.data);
+        } else {
+            resultsList.innerHTML = `<div class="empty-state">未找到相关结果<br><small>请尝试检查城市设置或更换关键词</small></div>`;
         }
+    }
+
+    function renderResults(items) {
+        resultsList.innerHTML = items.map((item, index) => `
+            <div class="result-item" onclick="selectItem(${index})">
+                <div class="result-title">${item.title}</div>
+                <div class="result-address">${item.address}</div>
+                <div class="result-tag">${item.district || ''} ${item.category || '地点'}</div>
+            </div>
+        `).join('');
+    }
+
+    function selectItem(index) {
+        selectedItem = searchResults[index];
         
-        let currentCity = "北京";
-        let selectedResult = null;
-        let searchResults = [];
-        
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 绑定事件
-            const searchInput = document.getElementById('searchInput');
-            const searchBtn = document.getElementById('searchBtn');
-            const citySelect = document.getElementById('citySelect');
-            
-            // 实时搜索
-            searchInput.addEventListener('input', function(e) {
-                const query = e.target.value.trim();
-                if (query.length > 0) {
-                    debounceSearch(query);
-                } else {
-                    hideResults();
-                }
-            });
-            
-            // 回车搜索
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    const query = e.target.value.trim();
-                    if (query) performSearch(query);
-                }
-            });
-            
-            // 点击搜索
-            searchBtn.addEventListener('click', function() {
-                const query = searchInput.value.trim();
-                if (query) performSearch(query);
-            });
-            
-            // 城市切换
-            citySelect.addEventListener('change', function(e) {
-                currentCity = e.target.value;
-                const query = searchInput.value.trim();
-                if (query) performSearch(query);
-            });
-            
-            // 初始焦点
-            setTimeout(() => searchInput.focus(), 300);
-            
-            // 显示历史记录
-            loadHistory();
+        // 视觉反馈
+        document.querySelectorAll('.result-item').forEach((el, i) => {
+            el.style.background = i === index ? '#f0f7ff' : '#fff';
+            el.style.borderLeft = i === index ? '4px solid #07c160' : 'none';
         });
+
+        actionBar.style.display = 'flex';
+    }
+
+    // 复制功能
+    function copyAddress() {
+        if (!selectedItem) return;
+        const text = `${selectedItem.title}，地址：${selectedItem.address}`;
         
-        // 防抖搜索
-        let debounceTimer;
-        function debounceSearch(query) {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                if (query.trim().length > 0) {
-                    performSearch(query);
-                }
-            }, 300);
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showToast('✅ 地址已复制，可直接粘贴');
+        } catch (err) {
+            showToast('复制失败，请手动长按');
         }
+        document.body.removeChild(textarea);
+    }
+
+    // 导航功能
+    function openNavigation() {
+        if (!selectedItem) return;
+        const { lat, lng } = selectedItem.location;
+        const title = encodeURIComponent(selectedItem.title);
         
-        // 执行搜索
-        async function performSearch(query) {
-            if (!query.trim()) return;
-            
-            // 显示加载
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('resultsCard').style.display = 'block';
-            document.getElementById('actionBar').style.display = 'none';
-            document.getElementById('resultsList').innerHTML = '';
-            
-            try {
-                const results = await searchTencentMap(query, currentCity);
-                searchResults = results;
-                displayResults(results);
-                
-                // 保存到历史记录
-                saveToHistory(query, currentCity);
-            } catch (error) {
-                console.error('搜索错误:', error);
-                document.getElementById('resultsList').innerHTML = `
-                    <div class="empty-state">
-                        <p>搜索失败</p>
-                        <small>${error.message || '请检查网络或Key配置'}</small>
-                    </div>
-                `;
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-        
-        // 腾讯地图搜索
-        async function searchTencentMap(query, city) {
-            const encodedQuery = encodeURIComponent(query);
-            const encodedCity = encodeURIComponent(city);
-            
-            // 修正后的URL，移除多余的斜杠
-            const url = `https://apis.map.qq.com/ws/place/v1/suggestion/?keyword=${encodedQuery}&region=${encodedCity}&key=${TENCENT_MAP_KEY}&output=json`;
-            
-            console.log('搜索URL:', url);
-            
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP 错误! 状态: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            console.log('API响应:', data);
-            
-            if (data.status === 0 && data.data && Array.isArray(data.data)) {
-                return data.data.map(item => ({
-                    id: item.id,
-                    title: item.title,
-                    address: item.address || '',
-                    province: item.province || '',
-                    city: item.city || '',
-                    district: item.district || '',
-                    lat: item.location && item.location.lat,
-                    lng: item.location && item.location.lng,
-                    category: item.category || '',
-                    adcode: item.adcode || ''
-                }));
-            } else if (data.status === 373) {
-                throw new Error('API Key配置错误，请检查域名白名单');
-            } else if (data.status === 300) {
-                throw new Error('请求参数错误');
-            } else {
-                throw new Error(data.message || '搜索失败');
-            }
-        }
-        
-        // 显示结果
-        function displayResults(results) {
-            const resultsList = document.getElementById('resultsList');
-            
-            if (!results || results.length === 0) {
-                resultsList.innerHTML = `
-                    <div class="empty-state">
-                        <p>没有找到相关地址</p>
-                        <small>请尝试其他关键词</small>
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            results.forEach((item, index) => {
-                const address = item.address || `${item.district}${item.city ? item.city : currentCity}`;
-                html += `
-                    <div class="result-item" onclick="selectResult(${index})" data-index="${index}">
-                        <div class="result-title">${item.title}</div>
-                        <div class="result-address">${address}</div>
-                        <div class="result-district">${item.district} · ${item.category || '地点'}</div>
-                    </div>
-                `;
-            });
-            
-            resultsList.innerHTML = html;
-        }
-        
-        // 选择结果
-        function selectResult(index) {
-            selectedResult = searchResults[index];
-            if (!selectedResult) return;
-            
-            // 高亮选中
-            document.querySelectorAll('.result-item').forEach(item => {
-                item.style.background = '';
-            });
-            event.currentTarget.style.background = '#f0f7ff';
-            
-            // 显示操作栏
-            document.getElementById('actionBar').style.display = 'flex';
-            
-            // 滚动到底部
-            setTimeout(() => {
-                document.getElementById('actionBar').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
-        }
-        
-        // 复制地址
-        function copyAddress() {
-            if (!selectedResult) return;
-            
-            const addressStr = `${selectedResult.title}（${selectedResult.address}）`;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(addressStr).then(() => {
-                    showToast('地址已复制');
-                }).catch(() => {
-                    fallbackCopy(addressStr);
-                });
-            } else {
-                fallbackCopy(addressStr);
-            }
-        }
-        
-        // 备用复制
-        function fallbackCopy(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            
-            try {
-                document.execCommand('copy');
-                showToast('地址已复制');
-            } catch (err) {
-                showToast('复制失败，请手动复制');
-            }
-            
-            document.body.removeChild(textArea);
-        }
-        
-        // 打开导航
-        function openNavigation() {
-            if (!selectedResult || !selectedResult.lat || !selectedResult.lng) {
-                alert('该地址缺少坐标信息');
-                return;
-            }
-            
-            const { lat, lng, title } = selectedResult;
-            
-            // 腾讯地图导航URL
-            const tencentMapUrl = `https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=${encodeURIComponent(title)}&tocoord=${lat},${lng}&referer=myapp`;
-            
-            // 高德地图备用
-            const gaodeMapUrl = `https://uri.amap.com/navigation?to=${lng},${lat},${encodeURIComponent(title)}&mode=car`;
-            
-            // 在微信内优先使用腾讯地图
-            if (navigator.userAgent.includes('MicroMessenger')) {
-                window.location.href = tencentMapUrl;
-            } else {
-                // 询问用户选择
-                if (confirm(`导航到：${title}\n\n使用腾讯地图导航？(确定)\n使用高德地图导航？(取消)`)) {
-                    window.location.href = tencentMapUrl;
-                } else {
-                    window.location.href = gaodeMapUrl;
-                }
-            }
-        }
-        
-        // 历史记录功能
-        function saveToHistory(query, city) {
-            let history = JSON.parse(localStorage.getItem('addressSearchHistory') || '[]');
-            
-            // 去重
-            history = history.filter(item => !(item.query === query && item.city === city));
-            
-            // 添加到开头
-            history.unshift({
-                query,
-                city,
-                timestamp: Date.now()
-            });
-            
-            // 保留最近10条
-            history = history.slice(0, 10);
-            
-            localStorage.setItem('addressSearchHistory', JSON.stringify(history));
-        }
-        
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('addressSearchHistory') || '[]');
-            if (history.length > 0) {
-                const historyHtml = history.map(item => 
-                    `<div class="history-tag" onclick="searchHistory('${item.query}', '${item.city}')">${item.query}</div>`
-                ).join('');
-                
-                // 可以在这里显示历史记录
-            }
-        }
-        
-        function searchHistory(query, city) {
-            document.getElementById('searchInput').value = query;
-            document.getElementById('citySelect').value = city;
-            currentCity = city;
-            performSearch(query);
-        }
-        
-        // 工具函数
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
-        }
-        
-        function hideResults() {
-            document.getElementById('resultsCard').style.display = 'none';
-            document.getElementById('actionBar').style.display = 'none';
-        }
-    </script>
+        // 腾讯地图协议（微信内兼容性最好）
+        const url = `https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=${title}&tocoord=${lat},${lng}&referer=PM_APP`;
+        window.location.href = url;
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 2000);
+    }
+</script>
+
 </body>
 </html>
